@@ -1,4 +1,29 @@
-# week 11 inclass activity
+- [Week 11 in-class activity](#week-11-in-class-activity)
+  - [VM prep](#vm-prep)
+  - [Git Repo organization](#git-repo-organization)
+- [Lab work](#lab-work)
+  - [Start with Docker](#start-with-docker)
+  - [Orchestrate with K8s](#orchestrate-with-k8s)
+    - [Create a pull-secret](#create-a-pull-secret)
+    - [Edit the manifest files](#edit-the-manifest-files)
+  - [Put it in a Helm Chart](#put-it-in-a-helm-chart)
+    - [prep your helm chart](#prep-your-helm-chart)
+      - [Values file](#values-file)
+    - [install using Helm](#install-using-helm)
+  - [Continous Delivery with ArgoCD](#continous-delivery-with-argocd)
+    - [ArgoCd prep!](#argocd-prep)
+    - [ArgoCD UI access](#argocd-ui-access)
+    - [Setting up a repo in ArgoCD](#setting-up-a-repo-in-argocd)
+      - [Setting up the helm chart in ArgoCD](#setting-up-the-helm-chart-in-argocd)
+      - [Deploy!](#deploy)
+
+---
+
+![ChatGPT prompt: you are a fun loving artist with a deep appreciation of calvin and hobbes. I want you to create banner image for a readme page on github. The banner image should be 4 times as wide as it is tall. On the left end is a character named Mark drawn in the style of calvin and hobbes with his buddies, a penguin and a chameleon. The penguin and the chameleon should resemble the Tux Penguin from Linux and the Suse Linux Mascot "Geeko" but they should also be anthromophized like Hobbes in Calvin and Hobbes. On the left Mark and his pals are looking over a vast ocean existedly, standing on a Docker whale. this image blends into the right image where Mark and his buddies are standing on a ships desk sterring a massive sailling ship helm or steering wheel. The winds are blowing and the seas seem rough but Mark and his pals seem determined and happy.](./static/banner.webp)
+
+---
+
+# Week 11 in-class activity
 
 We are going to go from docker to CI/CD!
 
