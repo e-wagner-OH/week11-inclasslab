@@ -358,9 +358,11 @@ If your test namespace is created and you have the argocd image pull secret read
 
 Try making some changes to the GitHub repo
 
-- edit your values.yaml locallly
+- edit your values.yaml locally and push to GitHub
   - change the configValue to edit the text.
   - update the redis image
+  - pull in the updates from ArgoCD for the GitOps experience
 - change the templates to add a ```{{ .Values.replicas }}``` and add to the values file
   - edit the replicaes and see the changes get pulled into ArgoCD
 - check your minikube pod numbers and namespaces
+  - what is happening with the changes?
