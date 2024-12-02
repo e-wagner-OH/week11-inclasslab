@@ -31,11 +31,3 @@ jobs:
         run: |
           docker build . -f Dockerfile_with_redis -t $ACR_HOST/week11-example/${{ env.STUDENT }}:v1
           docker push $ACR_HOST/week11-example/${{ env.STUDENT }}:v1
-
-      - name: Create Kubernetes Pull Secret
-        run: |
-          kubectl create secret docker-registry acr-pull-secret \
-            --docker-server=${{ env.ACR_HOST }} \
-            --docker-username=${{ secrets.DOCKER_USER }} \
-            --docker-password=${{ secrets.DOCKER_PASSWORD }} \
-            --docker-email=user@example.com
