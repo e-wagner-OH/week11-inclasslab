@@ -9,7 +9,12 @@ If you are using the CSCC vms, you should start with a fresh working copy of min
 ```bash
 minikube stop
 minikube delete
-minikube minikube start --container-runtime=docker --kubernetes-version=1.28.3
+minikube start --container-runtime=docker --kubernetes-version=1.28.3
+
+#or all together
+
+minikube stop && minikube delete && minikube start --container-runtime=docker --kubernetes-version=1.28.3
+
 ```
 
 ## docker stuff
@@ -176,3 +181,5 @@ We do not need to edit the helm chart area. It should be good.
 #### deploy!
 
 If your test namespace is created and you have the argocd image pull secret ready, you should be good to go.
+
+![yay again](./static/yayagain.png)
