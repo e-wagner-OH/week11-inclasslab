@@ -149,7 +149,7 @@ $ pwd
 ./week11-inclasslab/helm_chart/templates
 
 # run a quick copy command
-cp ../../manifests/* 
+cp ../../manifests/* .
 
 # double check your files
 $ ls -al
