@@ -56,10 +56,38 @@ replace all the services labels with {{ .Release.Name }}
 ## argocd stuff
 
 ```bash
+helm repo add argo https://argoproj.github.io/argo-helm
+helm repo update
 kubectl create namespace argocd
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-```
-get passwokrd
+helm install argocd argo/argo-cd --namespace argocd
 
-kubectl -n argocd get secret argocd-initial-admin-secret \
-          -o jsonpath="{.data.password}" | base64 -d; echo
+
+```
+
+
+youll get instructions to get the admin user password
+
+```bash
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+```
+
+in another terminal, kubectl port-forward to the argocd service
+
+```bash
+kubectl port-forward service/argocd-server -n argocd 8080:443
+```
+
+lets also create a new pull secret and new namespace for our app
+
+```bash
+kubectl create ns test
+kubectl create secret docker-registry acr-pull-secret-argocd -n test \
+    --docker-server=week9wiit7501.azurecr.io \
+    --docker-username=week9wiit7501 \
+    --docker-password=<DERP> \
+    --docker-email=ewagner14@cscc.edu
+
+```
+
+Lets add to the helm chart and update the values pull secret
+

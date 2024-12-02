@@ -13,10 +13,10 @@ spec:
         app: {{ .Release.Name }}-flask-app
     spec:
       imagePullSecrets:
-      - name: acr-pull-secret
+      - name: {{ .Values.configValue }}
       containers:
       - name: flask-app
-        image: "{{ .Values.image }}"
+        image: "{{ .Values.imagePullSecret }}"
         env:
         - name: CONFIG_VALUE
           value: "{{ .Values.configValue }}"
