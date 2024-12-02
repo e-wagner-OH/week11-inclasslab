@@ -29,5 +29,5 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          docker build . -f Dockerfile_with_redis -t $ACR_HOST/week11-example/${{ env.STUDENT }}:v1
+          docker build . -f Dockerfile_with_redis -t $ACR_HOST/week11-example/${{ env.STUDENT }}:v2
           docker push $ACR_HOST/week11-example/${{ env.STUDENT }}:v2
