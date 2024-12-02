@@ -4,6 +4,14 @@ from docker to CI/CD
 
 We are going to be using python, Dockerfile, kubernetes services and deployments, helm, and finally CI/CD with ArgoCD.
 
+If you are using the CSCC vms, you should start with a fresh working copy of minikube
+
+```bash
+minikube stop
+minikube delete
+minikube minikube start --container-runtime=docker --kubernetes-version=1.28.3
+```
+
 ## docker stuff
 
 build the image
