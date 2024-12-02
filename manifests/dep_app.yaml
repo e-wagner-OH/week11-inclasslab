@@ -6,22 +6,22 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: flask-app
+      app:
   template:
     metadata:
       labels:
-        app: flask-app
+        app: <where does this point?>
     spec:
       imagePullSecrets:
-      - name: acr-pull-secret
+      - name: <this is new to class>
       containers:
       - name: flask-app
-        image: week9wiit7501.azurecr.io/week11-example/ewagner14:v1
+        image: 
         env:
         - name: CONFIG_VALUE
-          value: "Hello from Kubernetes!"
+          value: "<put something witty here>"
         - name: REDIS_HOST
-          value: "redis-service" # Redis service name
+          value: "<what is this going to be?>" # Redis service name
         - name: REDIS_PORT
           value: "6379"          # Redis service port
         ports:
