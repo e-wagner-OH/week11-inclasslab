@@ -54,8 +54,9 @@ The lab is loosely broken up into 4 steps:
    1. Working on the ```Dockerfile``` in the base of the directory
 2. Orchestrate with K8s
    1. Working on the files in the ```manifests``` directory
-   2. Pushing images to Azure Container Registry with GitHub Actions
-   3. Pulling in images to the minikube environment using a image pull-secret
+   2. Checking the ```.github/workflows/ci.yaml``` file for changes or clues
+   3. Pushing images to Azure Container Registry with GitHub Actions
+   4. Pulling in images to the minikube environment using a image pull-secret
 3. Put it in a Helm Chart
    1. Working on the files in the ```helm-chart``` directory
    2. Reuses the pull-secret and GHA steps
@@ -93,6 +94,8 @@ This new setup will require you to push to your own github repo and setup GitHub
 - GitHub Actions Secrets
   - DOCKER_USER = week9wiit7501
   - DOCKER_PASSWORD = see class chat
+
+After you get these, I would push a test up into GitHub to make sure your image gets pushed to ACR. Check the ```.github/workflows/ci.yaml``` to make sure your GHA secrets and variables are set correctly.
 
 ### Create a pull-secret
 
