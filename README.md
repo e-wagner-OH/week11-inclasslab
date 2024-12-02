@@ -1,12 +1,15 @@
 # week 11 inclass activity
 
-from docker to CI/CD
+We are going to go from docker to CI/CD!
 
-We are going to be using python, Dockerfile, kubernetes services and deployments, helm, and finally CI/CD with ArgoCD.
+Using python, Dockerfiles, kubernetes services and deployments, helm charts, and finally, completing the CI/CD process with ArgoCD.
 
-If you are using the CSCC vms, you should start with a fresh working copy of minikube
+##  VM prep
+
+If you are using the CSCC vms, you should start with a fresh working copy of minikube. If you are working on your laptop, a fresh instance of kubernetes may be useful.
 
 ```bash
+# restart minikube using the fix found a weeks ago so that coredns doesnt break
 minikube stop
 minikube delete
 minikube start --container-runtime=docker --kubernetes-version=1.28.3
@@ -14,107 +17,248 @@ minikube start --container-runtime=docker --kubernetes-version=1.28.3
 #or all together
 
 minikube stop && minikube delete && minikube start --container-runtime=docker --kubernetes-version=1.28.3
-
 ```
 
-## docker stuff
+## Git Repo organization
 
-build the image
+This exercise builds on itself, so be careful hoping around. There are multiple Dockerfiles, python scripts, and kuberenetes deployments. If you are habitual tab opener (like myself) then double-check what you are editting if you run into issues.
 
-run the image
+The lab is loosely broken up into 4 steps:
+
+1. Start with Docker
+   1. Working on the ```Dockerfile``` in the base of the directory
+2. Orchestrate with K8s
+   1. Working on the files in the ```manifests``` directory
+   2. Pushing images to Azure Container Registry with GitHub Actions
+   3. Pulling in images to the minikube environment using a image pull-secret
+3. Put it in a Helm Chart
+   1. Working on the files in the ```helm-chart``` directory
+   2. Reuses the pull-secret and GHA steps
+4. Continous Delivery with ArgoCD
+   1. Installing ArgoCD with Helm
+   2. creating a namespace (ex: test)
+   3. Creating a pull-secret for the namespace
+   4. Using the ArgoCD UI to sync up the repo with the CRDs in ArgoCD
+
+# Lab work
+
+## Start with Docker 
+
+Edit the ```Dockerfile``` to build the image. See if you can set an ENV to control the config value in the ```Dockerfile```.
+
+*caution! there are two Dockerfiles*
+
+Then run the image with something like below.
 
 ```bash
 docker run -p 5001:5000 flask-app:latest
 ```
 
-## k8s stuff
+Can you see your ENV in the output?
 
-create a pull secret
+## Orchestrate with K8s
+
+Lets edit the files in the ```manifests/``` directory to get a working deployment. Lets also, follow good k8s practices by frontending it with a service. Lets also add a redis key-value store to add a page view component.
+
+This new setup will require you to push to your own github repo and setup GitHub Actions. We will be re-using 90% of the work in [Week 10's GitHub Actions in-class activity](https://github.com/ewagner14-cscc/wiit7501-nana-my-project) so you can use the instructions there to setup 4 values in the settings menu of your repo.
+
+- GitHub Actions Variables
+  - ACR_HOST = week9wiit7501.azurecr.io
+  - CSCCUID = your CSCC user ID
+- GitHub Actions Secrets
+  - DOCKER_USER = week9wiit7501
+  - DOCKER_PASSWORD = see class chat
+
+### Create a pull-secret
+
+In addition, we will need to setup a pull-secret in our minikube setup to pull images in from the Azure Container Registry (ACR). Note that you will need to provide the password and your email address.
 
 ```bash
+# Run against your minikube cluster
 kubectl create secret docker-registry acr-pull-secret \
     --docker-server=week9wiit7501.azurecr.io \
     --docker-username=week9wiit7501 \
-    --docker-password=<DERP> \
-    --docker-email=ewagner14@cscc.edu
+    --docker-password=<password here> \
+    --docker-email=<your email addy>@cscc.edu
 ```
 
-Could even add the secret creation to your github CI and fetch from a Key Vault
+### Edit the manifest files
+
+Explore the files in the ```manifests``` directory and update where needed to deploy the 2 services and 2 deployments.
+
+When it is running, use ```minikube service <svc-name>``` or ```kubectl port-forward``` to view the web page.
+
+Try a few things!
+
+- Use the image from the GitHub actions steps.
+  - Think about places you would have to edit to update the images used
+- Make sure you let the flask deployment know about the pull-secret! (see below)
+  - You can check on the secret using ```kubectl get secrets```
+- reload!
+  - See how the pages increment. The seperate Redis exists outside the deployment and persists until deleted
+- Update the values in the deployment to change the displayed text
+  - Update the deployment 
 
 ```yaml
-- name: Fetch ACR Password from Azure Key Vault
-  uses: azure/secrets-store-csi-driver-provider-azure@v1
-  with:
-    keyvault-name: ${{ secrets.AZURE_KEYVAULT_NAME }}
-    secret-name: acr-password
-    tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-
-- name: Create Kubernetes Pull Secret
-  run: |
-    kubectl create secret docker-registry acr-pull-secret \
-      --docker-server=${{ env.ACR_HOST }} \
-      --docker-username=${{ secrets.DOCKER_USER }} \
-      --docker-password=$ACR_PASSWORD \
-      --docker-email=user@example.com
+spec:
+  ...
+  template:
+  ...
+    spec:
+      imagePullSecrets:
+      - name: acr-pull-secret
 ```
 
-## helm stuff
+## Put it in a Helm Chart
 
-delete the templates dir
+In the base of the repo, run ```helm create helm_chart```. Run ```cd helm_chart/templates``` to get in the base directory. 
 
-add to the values file
-
-replace all the services labels with {{ .Release.Name }}
-
-## argocd stuff
+Now run ```rm -rf *```. Next we copy over all of the files from the ```manifests``` directory.
 
 ```bash
-helm repo add argo https://argoproj.github.io/argo-helm
-helm repo update
-kubectl create namespace argocd
-helm install argocd argo/argo-cd --namespace argocd
+# check your path
+$ pwd
+./week11-inclasslab/helm_chart/templates
 
+# run a quick copy command
+cp ../../manifests/* 
+
+# double check your files
+$ ls -al
+total 32
+drwxr-xr-x@ 6 eric  staff  192 Dec  2 14:08 .
+drwxr-xr-x@ 7 eric  staff  224 Dec  2 14:04 ..
+-rw-r--r--@ 1 eric  staff  663 Dec  2 14:08 dep_app.yaml
+-rw-r--r--@ 1 eric  staff  306 Dec  2 14:08 dep_redis.yaml
+-rw-r--r--@ 1 eric  staff  158 Dec  2 14:08 svc_app.yaml
+-rw-r--r--@ 1 eric  staff  156 Dec  2 14:08 svc_redis.yaml
+```
+### prep your helm chart
+
+Remember that Helm charts rely on the go templating language, and you need to call out what values we want to control with a ```values.yaml``` file.
+
+*If you get stuck, there is a branch in this repo with solutions*
+
+#### Values file
+
+Lets start with 3 values. Your ```values.yaml``` file is in the base of the ```helm_chart``` directory.
 
 ```
+configValue: "<what ever you want to say ex:Config from Helm>"
+image: <your image id. Check the output >
+imagePullSecret: acr-pull-secret
+```
+
+1. replace use {{ .Release.Name }}-something where appropriate
+2. Don't forget to update ```value: "{{ .Release.Name }}-redis-service" # Redis service name``` so that the Flask app points to the helm chart release Redis and not the previous Redis
+3. Look at places where you should add ```{{.Values.configValue}}```
+4. Look at places where you should add ```{{.Values.imagePullSecret}}```
 
 
-youll get instructions to get the admin user password
+```bash
+# Here is an example of the redis-service yaml with {{ .Release.Name }} added
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-redis-service
+spec:
+  selector:
+    app: {{ .Release.Name }}-redis
+  ports:
+  - protocol: TCP
+    port: 6379
+    targetPort: 6379
+```
+
+### install using Helm
+
+Using your helm chart commands, install a release of the application in minikube!
+
+- Are you facing issues?
+  - Can you use the clues from ```kubectl describe pod``` commands of ```kubectl logs``` to fix the helm chart?
+  - Are you images pulling from ACR?
+  - Did any get in on the first try?
+- Once you have it deployed, think about how you would make changes?
+  - New image files
+  - New configs, etc
+- Use ```minikube service <svc-name>``` or ```kubectl port-forward``` to view the web page and see that changed values
+
+
+## Continous Delivery with ArgoCD
+
+Lets complete the process with a Continous Delivery mechanism. We will be using ArgoCD. Let's get it installed using a helm chart of its own.
+
+
+### ArgoCd prep!
+
+Before we go any further, lets create a new namespace and a new pull-secret for this namespace since those are restricted. (ex: ```kubectl api-resources``` is great!)
+
+
+```bash
+# This is where argocd is going to deploy
+kubectl create ns test
+
+# need a new pull-secret in this namespace
+kubectl create secret docker-registry acr-pull-secret-argocd -n test \
+    --docker-server=week9wiit7501.azurecr.io \
+    --docker-username=week9wiit7501 \
+    --docker-password=<password here> \
+    --docker-email=<your email addy>@cscc.edu
+
+# check the different outputs
+kubectl get secrets
+kubectl get secrets -n test
+```
+
+```bash
+# add the argocd helm chart repo to our VM's helm repos
+helm repo add argo https://argoproj.github.io/argo-helm
+
+# update the repo list
+helm repo update
+
+# create a namespace for argocd
+kubectl create namespace argocd
+
+# install argocd to the new namespaces
+helm install argocd argo/argo-cd --namespace argocd
+```
+
+*This may take 1-3 mins*
+
+At the end you'll get some instructions on working with ArgoCD. (**bonus point** to anyone you brings up where the instructions come from!)
+
+You'll get instructions to get the admin user password. Something like the below:
 
 ```bash
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 ```
 
-in another terminal, kubectl port-forward to the argocd service
+Run the command and make note of the output, or the terminal it is in.
+
+### ArgoCD UI access
+
+In another terminal, ```kubectl port-forward``` to the argocd service. You can also use ```minikube service```. the instructions will spit out something like this.
 
 ```bash
 kubectl port-forward service/argocd-server -n argocd 8080:443
 ```
 
-lets also create a new pull secret and new namespace for our app
+Open up the ArgoCd UI in ```http://localhost:8080``` in a web browser. *Click through the warnings*
 
-```bash
-kubectl create ns test
-kubectl create secret docker-registry acr-pull-secret-argocd -n test \
-    --docker-server=week9wiit7501.azurecr.io \
-    --docker-username=week9wiit7501 \
-    --docker-password=<DERP> \
-    --docker-email=ewagner14@cscc.edu
+Use ```admin``` as the username and the password from the output in the other terminal.
 
-```
+Now, lets add to the helm chart and update the values pull secret
 
-Lets add to the helm chart and update the values pull secret
+### Setting up a repo in ArgoCD
 
-### argocd ui
+Now that we are logged into ArgoCD, we can setup our GitHub repo. *make sure it is public*
 
-#### setting up a repo
-
-first get logged into argocd
-
-now click into the settings menu
+Click into the settings menu
 
 ![settings menu](./static/settings.png)
 
-then click repos
+Click repos
 
 ![repos menu](./static/repos.png)
 
@@ -137,7 +281,7 @@ You should see a Successful connection status
 
 ![success](./static/yay.png)
 
-#### setting up the helm chart
+#### Setting up the helm chart in ArgoCD
 
 Click back out to the main argocd app
 
@@ -178,8 +322,17 @@ The next section is destination settings. Here we select the local k8s cluster i
 
 We do not need to edit the helm chart area. It should be good.
 
-#### deploy!
+#### Deploy!
 
 If your test namespace is created and you have the argocd image pull secret ready, you should be good to go.
 
 ![yay again](./static/yayagain.png)
+
+Try making some changes to the GitHub repo
+
+- edit your values.yaml locallly
+  - change the configValue to edit the text.
+  - update the redis image
+- change the templates to add a ```{{ .Values.replicas }}``` and add to the values file
+  - edit the replicaes and see the changes get pulled into ArgoCD
+- check your minikube pod numbers and namespaces
